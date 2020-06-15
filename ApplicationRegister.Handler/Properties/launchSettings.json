@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "ApplicationRegister.Handler": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}
