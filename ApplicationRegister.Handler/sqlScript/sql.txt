@@ -1,0 +1,71 @@
+IF NOT EXISTS(SELECT 1 FROM sys.databases WHERE name='BankDB')
+    CREATE DATABASE [BankDB]
+GO
+
+USE [BankDB]
+GO
+
+IF NOT EXISTS (SELECT * FROM SYSOBJECTS WHERE ID = OBJECT_ID(N'dbo.Application') AND OBJECTPROPERTY(ID, N'IsUserTable') = 1) 
+BEGIN
+    
+    CREATE TABLE dbo.[Application](
+		Id					INT PRIMARY KEY IDENTITY,
+		ClientId			INT NOT NULL,
+		DepartmentAddress	VARCHAR(50) NULL,
+		Amount				DECIMAL NOT NULL,
+		Currency			VARCHAR(20) NOT NULL,
+		[Ip]				VARCHAR(200) NOT NULL,
+		LastMode			DATETIME DEFAULT GETUTCDATE())
+
+		CREATE NONCLUSTERED INDEX IX_Application_ClientId ON dbo.[Application] (ClientId)
+		INCLUDE (DepartmentAddress);  
+        
+END;
+GO
+
+IF EXISTS (SELECT * FROM SYSOBJECTS WHERE ID = OBJECT_ID('dbo.ApplicationsSelect') AND OBJECTPROPERTY(id, N'IsProcedure') = 1)
+    DROP PROCEDURE dbo.ApplicationsSelect;
+GO
+
+CREATE PROCEDURE dbo.ApplicationsSelect(
+    @ClientId	INT,
+    @Address    VARCHAR(20) = NULL)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+		Id,
+		ClientId,
+		DepartmentAddress,
+		Amount,
+		Currency			
+    FROM dbo.[Application] AS App
+	WHERE (App.ClientId = @ClientId AND @Address IS NULL) OR (App.ClientId = @ClientId AND (@Address IS NOT NULL) AND App.DepartmentAddress = @Address)
+
+END
+GO
+
+
+IF EXISTS (SELECT * FROM SYSOBJECTS WHERE ID = OBJECT_ID('dbo.ApplicationInsert') AND OBJECTPROPERTY(id, N'IsProcedure') = 1)
+    DROP PROCEDURE dbo.ApplicationInsert;
+GO
+
+CREATE PROCEDURE dbo.ApplicationInsert(
+		@ClientId			INT,
+		@Address			VARCHAR(50),
+		@Amount				DECIMAL,
+		@Currency			VARCHAR(20),
+		@Ip					VARCHAR(200))
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO dbo.[Application]
+		(ClientId, DepartmentAddress, Amount, Currency, [Ip])
+		VALUES(@ClientId, @Address, @Amount, @Currency, @Ip)
+
+		SELECT @@IDENTITY AS Id
+END
+GO
+
